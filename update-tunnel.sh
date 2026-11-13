@@ -8,12 +8,17 @@ host=$(curl -sf --max-time 5 http://127.0.0.1:8795/quicktunnel | jq -r '.hostnam
 [ -n "$host" ] || { echo "tunnel metrics unavailable"; exit 0; }
 url="https://$host"
 current=$(jq -r '.url // empty' tunnel.json 2>/dev/null || true)
-[ "$url" = "$current" ] && exit 0
-code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url/" || true)
-[ "$code" = 200 ] || { echo "new address $url answers $code; not publishing yet"; exit 0; }
-printf '{"url":"%s","updated":"%s"}\n' "$url" "$(date -u +%FT%TZ)" > tunnel.json
-git add tunnel.json
-git -c user.name=wock -c user.email=55965962+wock9000@users.noreply.github.com \
-  commit -q -m "tunnel: $host"
-PRE_PUSH_SKIP_REPO_CENSUS=1 git push -q origin main
-echo "published $url"
+if [ "$url" != "$current" ]; then
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url/" || true)
+  [ "$code" = 200 ] || { echo "new address $url answers $code; not publishing yet"; exit 0; }
+  printf '{"url":"%s","updated":"%s"}\n' "$url" "$(date -u +%FT%TZ)" > tunnel.json
+  git add tunnel.json
+  git -c user.name=wock -c user.email=55965962+wock9000@users.noreply.github.com \
+    commit -q -m "tunnel: $host"
+fi
+# Push whenever local is ahead, not only right after a commit: a push that failed
+# earlier (network, hook) must be retried on the next run.
+if [ -n "$(git rev-list origin/main..HEAD 2>/dev/null)" ]; then
+  PRE_PUSH_SKIP_REPO_CENSUS=1 git push -q origin main
+  echo "published $(jq -r .url tunnel.json)"
+fi
