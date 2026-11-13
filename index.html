@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUSHI cross-venue arb dashboard</title>
+<meta name="robots" content="noindex">
+<style>
+  body { background:#0d1117; color:#c9d1d9; font:15px/1.5 system-ui, sans-serif; display:grid; place-items:center; min-height:100vh; margin:0; }
+  a { color:#58a6ff; }
+  .box { text-align:center; max-width:36rem; padding:2rem; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>SUSHI cross-venue arb dashboard</h1>
+  <p id="msg">Opening the live dashboard…</p>
+  <noscript><p>JavaScript is off. The current dashboard address is in <a href="tunnel.json">tunnel.json</a>.</p></noscript>
+</div>
+<script>
+  // Stable entry point. The dashboard runs on a host behind a tunnel whose
+  // address can change; tunnel.json (updated automatically) holds the current one.
+  // Everything after /sushi-arb/ is kept, so deep links like /sushi-arb/venues work.
+  (async () => {
+    const msg = document.getElementById('msg');
+    try {
+      const r = await fetch('tunnel.json?t=' + Date.now(), { cache: 'no-store' });
+      const { url } = await r.json();
+      const base = location.pathname.replace(/^\/sushi-arb/, '') || '/';
+      const target = url.replace(/\/$/, '') + base + location.search + location.hash;
+      msg.innerHTML = 'Opening <a href="' + target + '">' + target + '</a>…';
+      location.replace(target);
+    } catch (e) {
+      msg.textContent = 'The dashboard address could not be loaded. Try again in a minute.';
+    }
+  })();
+</script>
+</body>
+</html>
