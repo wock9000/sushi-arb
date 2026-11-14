@@ -1,5 +1,5 @@
 # sushi-arb
 
-Stable link to the SUSHI cross-venue arbitrage dashboard: <https://wock9000.github.io/sushi-arb/>
+Redirect to the SUSHI cross-venue arbitrage dashboard at <https://sushi.xylem-group.org>.
 
-`tunnel.json` holds the dashboard's current address and is updated automatically by the host.
+`index.html` / `404.html` forward to the address in `tunnel.json`, keeping the path.
